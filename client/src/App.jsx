@@ -1,19 +1,8 @@
-import BrowseRoute from "./BrowseRoute";
+import React from "react"
+import BrowseRoute from "./Routes/BrowseRoute"
 
 function App() {
-
-  return (
-    <Routes>
-      <BrowseRoute/>
-    </Routes>
-  )
+  return <BrowseRoute />
 }
 
 export default App
-
-{/* <>
-      <div className="flex justify-center items-center bg-blue-200 h-30">
-        <h1 className="text-5xl text-amber-800">hussain
-        </h1>
-      </div>
-    </> */}
