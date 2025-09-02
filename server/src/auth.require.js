@@ -1,4 +1,4 @@
-const { verifyToken } = require("./utils.jwt");
+const { verifyToken } = require("./utils.jwt.js");
 const COOKIE_NAME = "session";
 
 function authRequired(req, res, next) {
