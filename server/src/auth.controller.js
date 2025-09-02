@@ -4,7 +4,13 @@ const { getPublicUsers } = require('./users.memory');
 const { verifyToken } = require('./utils.jwt');
 
 const COOKIE_NAME = "session";
-const COOKIE_OPTIONS = { httpOnly: true, sameSite: "lax", secure: false, path: "/" };
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    sameSite: "none",   // cross-origin ke liye zaroori
+    secure: true,       // HTTPS ke bina cookie nahi jayegi
+    path: "/"
+  };
+  
 
 
 const handleSignup = async (req, res) => {
