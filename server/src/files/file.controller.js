@@ -1,6 +1,7 @@
 const { FileModel } = require('./file.model');
 const { processUploadedFiles, toClientDTO, toClientList } = require('./file.service');
 const { getQrUrl } = require('./qr.controller'); // helper for generating qr url
+const fs = require('fs');
 
 function parseIntOr(value, fallback) {
   const n = parseInt(value, 10);
@@ -79,4 +80,28 @@ const handleGetOne = async (req, res) => {
   }
 };
 
-module.exports = { handleUpload, handleList, handleGetOne };
+const handleDelete = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const doc = await FileModel.findById(id);
+      if (!doc) return res.status(404).json({ error: "File not found" });
+  
+      // try to remove QR PNG if exists
+      if (doc.qr?.pngPath && fs.existsSync(doc.qr.pngPath)) {
+        fs.unlinkSync(doc.qr.pngPath);
+      }
+  
+      // try to remove uploaded file if exists
+      if (doc.storage?.path && fs.existsSync(doc.storage.path)) {
+        fs.unlinkSync(doc.storage.path);
+      }
+  
+      await FileModel.deleteOne({ _id: id });
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message || "Delete failed" });
+    }
+  };
+  
+
+module.exports = { handleUpload, handleList, handleGetOne, handleDelete };

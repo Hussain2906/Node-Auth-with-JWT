@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { apiGet, apiPostForm } from "../../lib/apiClient"
+import { apiDelete, apiGet, apiPostForm } from "../../lib/apiClient"
 
 const initialState = {
   items: [],
@@ -13,8 +13,17 @@ const filesSlice = createSlice({
   reducers: {
     setFilesStatus(state, action) { state.status = action.payload },
     setFilesError(state, action) { state.errorMessage = action.payload },
-    setFiles(state, action) { state.items = action.payload || [] },
-    addFiles(state, action) { (action.payload || []).forEach(it => state.items.unshift(it)) },
+    setFiles(state, action) {
+      // ✅ Allow both direct array payload OR updater function
+      if (typeof action.payload === "function") {
+        state.items = action.payload(state.items)
+      } else {
+        state.items = action.payload || []
+      }
+    },
+    addFiles(state, action) {
+      (action.payload || []).forEach(it => state.items.unshift(it))
+    },
     clearFiles(state) { state.items = [] },
   },
 })
@@ -27,7 +36,7 @@ export function fetchFiles({ page = 1, limit = 20 } = {}) {
   return async function (dispatch) {
     dispatch(setFilesStatus("loading")); dispatch(setFilesError(null))
     try {
-        const data = await apiGet(`/api/files?page=${page}&limit=${limit}`)
+      const data = await apiGet(`/api/files?page=${page}&limit=${limit}`)
       dispatch(setFiles(data.items || []))
       dispatch(setFilesStatus("ready"))
     } catch (err) {
@@ -45,6 +54,20 @@ export function uploadFiles({ fileList }) {
       Array.from(fileList).forEach(f => fd.append("files", f)) // field name must be "files"
       const data = await apiPostForm(`/api/files`, fd)
       dispatch(addFiles(data.items || []))
+      dispatch(setFilesStatus("ready"))
+    } catch (err) {
+      dispatch(setFilesStatus("error")); dispatch(setFilesError(err.message))
+    }
+  }
+}
+
+// async: delete one file
+export function deleteFile(id) {
+  return async function (dispatch) {
+    dispatch(setFilesStatus("loading")); dispatch(setFilesError(null))
+    try {
+      await apiDelete(`/api/files/${id}`)
+      dispatch(setFiles(prev => prev.filter(f => f.id !== id)))
       dispatch(setFilesStatus("ready"))
     } catch (err) {
       dispatch(setFilesStatus("error")); dispatch(setFilesError(err.message))

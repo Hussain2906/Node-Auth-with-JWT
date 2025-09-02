@@ -1,12 +1,13 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+    deleteFile,
   fetchFiles,
   selectFiles,
   selectFilesStatus,
 } from "../Features/files/filesSlice";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Download, ExternalLink, File } from "lucide-react";
+import { Download, ExternalLink, File,Trash2 } from "lucide-react";
 
 export default function FileGrid() {
   const dispatch = useDispatch();
@@ -77,6 +78,12 @@ export default function FileGrid() {
                   >
                     <ExternalLink className="h-4 w-4" /> Open
                   </a>
+                  <button
+                    onClick={() => dispatch(deleteFile(file.id))}
+                    className="flex items-center gap-1 text-red-600 hover:underline"
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </button>
                 </div>
               </CardContent>
             </Card>
