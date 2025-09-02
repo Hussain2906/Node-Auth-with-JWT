@@ -27,7 +27,7 @@ export function fetchFiles({ page = 1, limit = 20 } = {}) {
   return async function (dispatch) {
     dispatch(setFilesStatus("loading")); dispatch(setFilesError(null))
     try {
-      const data = await apiGet(`/files?page=${page}&limit=${limit}`)
+        const data = await apiGet(`/api/files?page=${page}&limit=${limit}`)
       dispatch(setFiles(data.items || []))
       dispatch(setFilesStatus("ready"))
     } catch (err) {
@@ -43,7 +43,7 @@ export function uploadFiles({ fileList }) {
     try {
       const fd = new FormData()
       Array.from(fileList).forEach(f => fd.append("files", f)) // field name must be "files"
-      const data = await apiPostForm(`/files`, fd)
+      const data = await apiPostForm(`/api/files`, fd)
       dispatch(addFiles(data.items || []))
       dispatch(setFilesStatus("ready"))
     } catch (err) {

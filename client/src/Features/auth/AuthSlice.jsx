@@ -36,7 +36,7 @@ export function signupWithEmailPassword ({ emailValue, passwordValue }) {
   return async function (dispatch){
     dispatch(setStatus("loading")); dispatch(setErrorMessage(null));
     try {
-      const data = await apiPostJson("/signup", { email: emailValue, password: passwordValue });
+      const data = await apiPostJson("/api/signup", { email: emailValue, password: passwordValue });
       dispatch(setUser(data.user)); dispatch(setStatus("loggedIn"));
     } catch (err) {
       dispatch(setStatus("error")); dispatch(setErrorMessage(err.message));
@@ -49,7 +49,7 @@ export function loginWithEmailPassword ({ emailValue, passwordValue }) {
     dispatch(setStatus("loading"));
     dispatch(setErrorMessage(null));
     try {
-      const data = await apiPostJson('/login', {email: emailValue, password:passwordValue})
+      const data = await apiPostJson('/api/login', {email: emailValue, password:passwordValue})
       dispatch(setUser(data.user)); dispatch(setStatus("loggedIn"));
     } catch (err) {
       dispatch(setStatus("error")); dispatch(setErrorMessage(err.message));
@@ -61,7 +61,7 @@ export function checkExistingSession() {
   return async function (dispatch){
     dispatch(setStatus("loading"));
     try {
-      const data = await apiGet("/me");
+      const data = await apiGet("/api/me");
       dispatch(setUser(data.user)); dispatch(setStatus("loggedIn"));
     } catch {
       dispatch(clearAllAuth()); // loggedOut
@@ -72,7 +72,7 @@ export function checkExistingSession() {
 export function logoutUser() {
   return async function (dispatch) {
     try {
-      await apiPostJson("/logout", {});
+      await apiPostJson("/api/logout", {});
     } catch (err) {
       console.warn("logout failed (ignored):", err.message);
     }
