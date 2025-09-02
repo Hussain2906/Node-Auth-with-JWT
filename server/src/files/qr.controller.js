@@ -13,6 +13,7 @@ async function handleQrPng(req, res) {
   }
 
   res.setHeader("Content-Type", "image/png");
+  res.setHeader("Content-Disposition", `attachment; filename="${id}.png"`);
   return res.sendFile(path.resolve(pngPath));
 }
 
