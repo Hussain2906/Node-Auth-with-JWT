@@ -23,6 +23,7 @@ export function apiPostForm(path, formData) {
 export function apiPostJson(path, body) {
     return apiFetch(path, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body || {}),
     });
