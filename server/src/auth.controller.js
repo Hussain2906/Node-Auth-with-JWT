@@ -6,8 +6,8 @@ const { verifyToken } = require('./utils.jwt');
 const COOKIE_NAME = "session";
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    sameSite: "none",   // cross-origin ke liye zaroori
-    secure: true,       // HTTPS ke bina cookie nahi jayegi
+    sameSite: "lax",   // cross-origin ke liye zaroori
+    secure: false,       // HTTPS ke bina cookie nahi jayegi
     path: "/"
   };
   

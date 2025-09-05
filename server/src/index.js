@@ -16,7 +16,8 @@ const PORT = process.env.PORT || 8000
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://qr-code-generator-0opz.onrender.com"
+  "https://qr-code-generator-0opz.onrender.com",
+  "http://52.53.255.232"
 ]
 
 app.use(cors({
