@@ -12,8 +12,8 @@ const fileSchema = new Schema(
             url: { type: String },                                   
         },
         qr: {
-            pngPath: { type: String, required: true },           
-            publicUrl: { type: String, required: true },          
+            pngPath: { type: String },           
+            publicUrl: { type: String},          
         },
         uploaderId: { type: String, required: true },
     },
