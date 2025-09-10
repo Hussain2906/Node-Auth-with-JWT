@@ -1,7 +1,7 @@
 const { FileModel } = require('./file.model');
 const { processUploadedFiles, toClientDTO, toClientList } = require('./file.service');
 const { getQrUrl } = require('./qr.controller'); 
-const { deleteFileFromS3 } = require('./s3.service'); //  new import
+const { deleteFromS3 } = require('./s3.service'); //  new import
 
 function parseIntOr(value, fallback) {
   const n = parseInt(value, 10);
@@ -93,12 +93,12 @@ const handleDelete = async (req, res) => {
 
     //  Delete original file from S3
     if (doc.storage?.key) {
-      await deleteFileFromS3(doc.storage.key);
+      await deleteFromS3(doc.storage.key);
     }
 
     //  Delete QR PNG from S3 (if stored separately)
     if (doc.qr?.key) {
-      await deleteFileFromS3(doc.qr.key);
+      await deleteFromS3(doc.qr.key);
     }
 
     await FileModel.deleteOne({ _id: id });
