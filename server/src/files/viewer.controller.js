@@ -1,7 +1,11 @@
-const { FileModel } = require('./file.model');
+// server/src/files/viewer.controller.js
+const { FileModel } = require("./file.model");
+
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || "http://localhost:8000";
 
-function fileServeUrl(id) { return `/fileserve/${id}`; }
+function fileServeUrl(id) { 
+  return `/fileserve/${id}`; 
+}
 
 function pageSkeleton({ title, bodyHtml }) {
     return `<!doctype html>
@@ -32,21 +36,19 @@ function pageSkeleton({ title, bodyHtml }) {
       </body>
     </html>`;
   }
-  
-  
 
-  function buildEmbedHtml(doc) {
+function buildEmbedHtml(doc) {
     const src = fileServeUrl(doc._id.toString());
-  
+
     const raw = String(doc.mimeType || "").toLowerCase().trim();
     const mt = raw;
     const storagePath = doc?.storage?.path || "";
     const ext = (storagePath.split(".").pop() || "").toLowerCase();
-  
+
     const isImage = mt.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif"].includes(ext);
     const isVideo = mt.startsWith("video/") || ["mp4", "mov", "webm", "ogg"].includes(ext);
     const isPdf   = mt === "application/pdf" || ext === "pdf";
-  
+
     let preview = `<p class="text-gray-600">Preview not available for <code>${mt || ext || "unknown"}</code>.</p>`;
     
     if (isImage) {
@@ -58,7 +60,7 @@ function pageSkeleton({ title, bodyHtml }) {
     if (isPdf) {
       preview = `<iframe src="${src}" class="rounded-lg shadow w-full h-[70vh] border"></iframe>`;
     }
-  
+
     return `
       <div class="space-y-4">
         ${preview}
@@ -69,8 +71,6 @@ function pageSkeleton({ title, bodyHtml }) {
       </div>
     `;
   }
-  
-  
 
 const handleViewer = async (req, res) => {
     try {
@@ -78,12 +78,15 @@ const handleViewer = async (req, res) => {
         const doc = await FileModel.findById(id);
         if (!doc) {
             return res.status(404).send("Not found");
-        } const bodyHtml = buildEmbedHtml(doc);
+        } 
+        const bodyHtml = buildEmbedHtml(doc);
         const html = pageSkeleton({ title: doc.originalName, bodyHtml });
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         return res.status(200).send(html);
     } catch (err) {
+        console.error("handleViewer error:", err);
         return res.status(500).send("Viewer error");
     }
 }
+
 module.exports = { handleViewer };
