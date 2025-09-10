@@ -7,8 +7,8 @@ const fileSchema = new Schema(
         mimeType: { type: String, required: true },          
         sizeBytes: { type: Number, required: true },          
         storage: {
-            kind: { type: String, enum: ["disk"], default: "disk" }, 
-            path: { type: String, required: true },                   
+            kind: { type: String, enum: ["disk", "s3"], default: "disk" }, 
+            path: { type: String},                   
             url: { type: String },                                   
         },
         qr: {
