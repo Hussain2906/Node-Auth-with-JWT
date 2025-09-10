@@ -1,7 +1,7 @@
 const { FileModel } = require('./file.model');
 const { processUploadedFiles, toClientDTO, toClientList } = require('./file.service');
-const { getQrUrl } = require('./qr.controller'); // helper for generating qr url
-const fs = require('fs');
+const { getQrUrl } = require('./qr.controller'); 
+const { deleteFileFromS3 } = require('./s3.service'); //  new import
 
 function parseIntOr(value, fallback) {
   const n = parseInt(value, 10);
@@ -19,12 +19,14 @@ const handleUpload = async (req, res) => {
     const uploaderId = req.user?.id || null;
     const docs = await processUploadedFiles(files, uploaderId);
 
-    // build response objects with qrUrl injected
-    const items = docs.map(doc => {
-      const dto = toClientDTO(doc);
-      dto.qrUrl = getQrUrl(doc._id);
-      return dto;
-    });
+    // await each async dto
+    const items = await Promise.all(
+      docs.map(async (doc) => {
+        const dto = await toClientDTO(doc);
+        dto.qrUrl = getQrUrl(doc._id);
+        return dto;
+      })
+    );
 
     return res.status(201).json({ items });
   } catch (err) {
@@ -33,30 +35,32 @@ const handleUpload = async (req, res) => {
   }
 };
 
-// GET /api/files — list with pagination + optional filter
+// GET /api/files — list
 const handleList = async (req, res) => {
   try {
     const page = parseIntOr(req.query.page, 1);
     const limit = parseIntOr(req.query.limit, 20);
 
     const filter = { uploaderId: req.user.id };
-    if (req.query.mimeType) {
-      filter.mimeType = req.query.mimeType;
-    }
+    if (req.query.mimeType) filter.mimeType = req.query.mimeType;
 
     const cursor = FileModel.find(filter)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
-    const [items, total] = await Promise.all([cursor, FileModel.countDocuments(filter)]);
+    const [items, total] = await Promise.all([
+      cursor,
+      FileModel.countDocuments(filter),
+    ]);
 
-    // map each doc to client dto + attach qrUrl
-    const dtoItems = items.map(doc => {
-      const dto = toClientDTO(doc);
-      dto.qrUrl = getQrUrl(doc._id);
-      return dto;
-    });
+    const dtoItems = await Promise.all(
+      items.map(async (doc) => {
+        const dto = await toClientDTO(doc);
+        dto.qrUrl = getQrUrl(doc._id);
+        return dto;
+      })
+    );
 
     return res.status(200).json({ page, limit, total, items: dtoItems });
   } catch (err) {
@@ -64,7 +68,7 @@ const handleList = async (req, res) => {
   }
 };
 
-// GET /api/files/:id — single meta
+// GET /api/files/:id
 const handleGetOne = async (req, res) => {
   try {
     const { id } = req.params;
@@ -72,36 +76,36 @@ const handleGetOne = async (req, res) => {
     if (!doc) {
       return res.status(404).json({ error: 'not found' });
     }
-    const dto = toClientDTO(doc);
-    dto.qrUrl = getQrUrl(doc._id); // add qr url for direct use in UI
+    const dto = await toClientDTO(doc);
+    dto.qrUrl = getQrUrl(doc._id);
     return res.status(200).json({ items: dto });
   } catch (err) {
     return res.status(500).json({ error: err.message || 'fetch failed' });
   }
 };
 
+// DELETE /api/files/:id
 const handleDelete = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const doc = await FileModel.findById(id);
-      if (!doc) return res.status(404).json({ error: "File not found" });
-  
-      // try to remove QR PNG if exists
-      if (doc.qr?.pngPath && fs.existsSync(doc.qr.pngPath)) {
-        fs.unlinkSync(doc.qr.pngPath);
-      }
-  
-      // try to remove uploaded file if exists
-      if (doc.storage?.path && fs.existsSync(doc.storage.path)) {
-        fs.unlinkSync(doc.storage.path);
-      }
-  
-      await FileModel.deleteOne({ _id: id });
-      return res.status(200).json({ success: true });
-    } catch (err) {
-      return res.status(500).json({ error: err.message || "Delete failed" });
+  try {
+    const { id } = req.params;
+    const doc = await FileModel.findById(id);
+    if (!doc) return res.status(404).json({ error: "File not found" });
+
+    //  Delete original file from S3
+    if (doc.storage?.key) {
+      await deleteFileFromS3(doc.storage.key);
     }
-  };
-  
+
+    //  Delete QR PNG from S3 (if stored separately)
+    if (doc.qr?.key) {
+      await deleteFileFromS3(doc.qr.key);
+    }
+
+    await FileModel.deleteOne({ _id: id });
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || "Delete failed" });
+  }
+};
 
 module.exports = { handleUpload, handleList, handleGetOne, handleDelete };
