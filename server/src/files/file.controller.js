@@ -27,6 +27,12 @@ const handleUpload = async (req, res) => {
         return dto;
       })
     );
+    console.log("DEBUG uploaded files:", files.map(f => ({
+      fieldname: f.fieldname,
+      originalname: f.originalname,
+      size: f.size
+    })));
+    
 
     return res.status(201).json({ items });
   } catch (err) {

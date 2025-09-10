@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const QRCode = require("qrcode");
 const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-
+const { uploadToS3 } = require("./s3.service");
 const { FileModel } = require("./file.model");
 const { QRS_DIR } = require("./upload.middleware");
 
@@ -36,17 +36,6 @@ function mapMulterToMeta(file, s3Key) {
   };
 }
 
-// upload file to S3
-async function uploadToS3(file, key) {
-  const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: file.buffer, // multer memory storage required
-    ContentType: file.mimetype,
-  });
-  await s3.send(command);
-}
-
 // create DB doc + generate QR PNG file
 async function createDocAndQr(file, uploaderId = null) {
   const _id = new mongoose.Types.ObjectId();
@@ -55,8 +44,7 @@ async function createDocAndQr(file, uploaderId = null) {
 
   // file S3 key (unique per upload)
   const fileKey = `uploads/${idStr}_${file.originalname}`;
-  await uploadToS3(file, fileKey);
-
+  await uploadToS3(fileKey, file.buffer, file.mimetype);
   // generate QR → upload QR PNG to S3 also
   const qrKey = `qrs/${idStr}.png`;
   const qrBuffer = await QRCode.toBuffer(viewUrl, {
